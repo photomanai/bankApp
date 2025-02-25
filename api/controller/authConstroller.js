@@ -9,13 +9,13 @@ module.exports.check = async (req, res) => {
       res.status(201).json({
         status: "success",
         message: "Login",
-        fin: fin,
+        haveAccount: true,
       });
     } else {
       res.status(201).json({
         status: "success",
         message: "Register",
-        fin: false,
+        haveAccount: false,
       });
     }
   } catch (e) {
@@ -32,6 +32,17 @@ module.exports.register = async (req, res) => {
     if (existingAccount) {
       return res.status(400).json({ message: "Number already exists" });
     }
+
+    const newAccount = new Account({
+      name,
+      sirname,
+      password,
+      fin,
+      num,
+    });
+
+    await newAccount.save();
+    res.status(201).json({ newAccount, message: "Register successful" });
   } catch (e) {
     console.error("Error during registration: ", e);
     res.status(500).json({ message: "Server error" });
