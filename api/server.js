@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("./models/db");
-const router = require("./routers/authRouter");
+const router = require("./routers/routerManager");
 const cors = require("cors");
 
 const app = express();
