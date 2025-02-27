@@ -52,6 +52,21 @@ module.exports.register = async (req, res) => {
   }
 };
 
+const generateAccessToken = (account) => {
+  return jwt.sign(
+    { accountId: account._id, fin: account.fin },
+    process.env.JWT_TOKEN,
+    { expiresIn: "1h" }
+  );
+};
+
+const generateRefreshToken = (account) => {
+  return jwt.sign(
+    { accountId: account._id, fin: account.fin },
+    process.env.REFRESH_TOKEN
+  );
+};
+
 module.exports.login = async (req, res) => {
   try {
     const { password, fin, num } = req.body;
@@ -63,10 +78,13 @@ module.exports.login = async (req, res) => {
 
     const isPassCorrect = await bcrypt.compare(password, account.password);
     if (isPassCorrect) {
-      const token = jwt.sign(
-        { accountId: account._id, fin: account.fin },
-        process.env.JWT_TOKEN
-      );
+      const token = generateAccessToken(account);
+      const refreshToken = generateRefreshToken(account);
+
+      // res.cookie("refreshToken", refreshToken, {
+      //   httpOnly: false,
+      //   secure: false,
+      // });
 
       res.status(200).json({
         message: "Login successful",
@@ -81,4 +99,33 @@ module.exports.login = async (req, res) => {
     console.error("Error during registration: ", e);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+module.exports.refresh = (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token" });
+  }
+
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN, (err, user) => {
+    if (err) {
+      return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    if (!user) {
+      return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    console.log(user);
+
+    const newAccessToken = generateAccessToken({
+      _id: user._id,
+      fin: user.fin,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Token refreshed", accessToken: newAccessToken });
+  });
 };

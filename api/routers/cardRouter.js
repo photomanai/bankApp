@@ -2,8 +2,9 @@ const express = require("express");
 
 const router = express.Router();
 
-const card = require("../controller/cardConstroller");
+const controller = require("../controllers/cardConstroller");
+const { verify } = require("../middleware/authMiddleware");
 
-router.post("/create", card.create);
+router.post("/create", verify, controller.create);
 
 module.exports = router;

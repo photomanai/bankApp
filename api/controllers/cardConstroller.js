@@ -77,10 +77,12 @@ module.exports.create = async (req, res) => {
     return { cardDigits, cardCvv, cardDate };
   };
   try {
-    const { createdBy } = req.body;
+    const user = req.user;
 
     let card;
     let existingCard;
+
+    console.log(user);
 
     do {
       card = cardGenerator();
@@ -91,7 +93,7 @@ module.exports.create = async (req, res) => {
       digits: card.cardDigits,
       cvv: card.cardCvv,
       date: card.cardDate,
-      createdBy,
+      createdBy: user.accountId,
     });
     await newCard.save();
     res.status(200).json({
