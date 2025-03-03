@@ -82,8 +82,6 @@ module.exports.create = async (req, res) => {
     let card;
     let existingCard;
 
-    console.log(user);
-
     do {
       card = cardGenerator();
       existingCard = await Card.findOne({ digits: card.cardDigits });
@@ -101,6 +99,58 @@ module.exports.create = async (req, res) => {
     });
   } catch (e) {
     console.error("Error during generate card: ", e);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.callCards = async (req, res) => {
+  try {
+    const { accountId } = req.user;
+    const cards = await Card.find({ createdBy: accountId });
+    res.status(200).json({
+      message: "Cards call Successfully",
+      cards: cards,
+    });
+  } catch (e) {
+    console.error("Error during call card: ", e);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.getMoney = async (req, res) => {
+  try {
+    const { accountId } = req.user;
+    const { cardInfo, money } = req.body;
+
+    const card = await Card.findOne({
+      createdBy: accountId,
+      digits: cardInfo.digits,
+      cvv: cardInfo.cvv,
+      date: cardInfo.date,
+    });
+
+    const claimerCard = await Card.findOne({ digits: toCardDigits });
+  } catch (e) {
+    console.error("Error during call card: ", e);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.sendMoney = async (req, res) => {
+  try {
+    const { accountId } = req.user;
+    const { fromCard, toCardDigits } = req.body;
+
+    const senderCard = await Card.findOne({
+      createdBy: accountId,
+      digits: fromCard.digits,
+      cvv: fromCard.cvv,
+      date: fromCard.date,
+    });
+
+    const claimerCard = await Card.findOne({ digits: toCardDigits });
+  } catch (e) {
+    console.error("Error during call card: ", e);
     res.status(500).json({ message: "Server error" });
   }
 };
