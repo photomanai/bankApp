@@ -92,6 +92,7 @@ module.exports.create = async (req, res) => {
       cvv: card.cardCvv,
       date: card.cardDate,
       createdBy: user.accountId,
+      balance: 0,
     });
     await newCard.save();
     res.status(200).json({
@@ -117,11 +118,12 @@ module.exports.callCards = async (req, res) => {
   }
 };
 
-module.exports.getMoney = async (req, res) => {
+module.exports.addMoney = async (req, res) => {
   try {
     const { accountId } = req.user;
     const { cardInfo, money } = req.body;
 
+    // Find the card first to get its current balance
     const card = await Card.findOne({
       createdBy: accountId,
       digits: cardInfo.digits,
@@ -129,9 +131,59 @@ module.exports.getMoney = async (req, res) => {
       date: cardInfo.date,
     });
 
-    const claimerCard = await Card.findOne({ digits: toCardDigits });
+    if (!card) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+
+    // Update the card balance
+    const updatedCard = await Card.findOneAndUpdate(
+      { _id: card._id },
+      { $inc: { balance: money } }, // `$inc` increments balance
+      { new: true } // Returns updated document
+    );
+
+    res
+      .status(200)
+      .json({ message: "Money added successfully", card: updatedCard });
   } catch (e) {
-    console.error("Error during call card: ", e);
+    console.error("Error during card update: ", e);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.getMoney = async (req, res) => {
+  try {
+    const { accountId } = req.user;
+    const { cardInfo, money } = req.body;
+
+    // Find the card first to get its current balance
+    const card = await Card.findOne({
+      createdBy: accountId,
+      digits: cardInfo.digits,
+      cvv: cardInfo.cvv,
+      date: cardInfo.date,
+    });
+
+    if (!card) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+
+    if (card.balance < money) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    // Update the card balance
+    const updatedCard = await Card.findOneAndUpdate(
+      { _id: card._id },
+      { $inc: { balance: -money } }, // `$inc` increments balance
+      { new: true } // Returns updated document
+    );
+
+    res
+      .status(200)
+      .json({ message: "Money added successfully", card: updatedCard });
+  } catch (e) {
+    console.error("Error during card update: ", e);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -147,8 +199,14 @@ module.exports.sendMoney = async (req, res) => {
       cvv: fromCard.cvv,
       date: fromCard.date,
     });
+    if (!senderCard) {
+      return res.status(404).json({ message: "Sender Card not found" });
+    }
 
     const claimerCard = await Card.findOne({ digits: toCardDigits });
+    if (!claimerCard) {
+      return res.status(404).json({ message: "Claimer Card not found" });
+    }
   } catch (e) {
     console.error("Error during call card: ", e);
     res.status(500).json({ message: "Server error" });

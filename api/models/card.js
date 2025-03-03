@@ -6,6 +6,7 @@ const cardSchema = new Schema({
   cvv: { type: String, required: true },
   date: { type: String, required: true },
   createdBy: { type: String, required: true },
+  balance: { type: Number, required: true },
 });
 
 const card = mongoose.model("card", cardSchema);
