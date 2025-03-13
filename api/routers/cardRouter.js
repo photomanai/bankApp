@@ -5,9 +5,10 @@ const router = express.Router();
 const controller = require("../controllers/cardConstroller");
 const { verify } = require("../middleware/authMiddleware");
 
-router.post("/create", verify, controller.create);
-router.post("/call", verify, controller.callCards);
-router.post("/get-money", verify, controller.getMoney);
-router.post("/add-money", verify, controller.addMoney);
+router.post("/create", controller.create);
+router.post("/call", controller.callCards);
+router.post("/add-money", controller.addMoney);
+router.post("/get-money", controller.getMoney);
+router.post("/send-money", controller.sendMoney);
 
 module.exports = router;

@@ -191,7 +191,7 @@ module.exports.getMoney = async (req, res) => {
 module.exports.sendMoney = async (req, res) => {
   try {
     const { accountId } = req.user;
-    const { fromCard, toCardDigits } = req.body;
+    const { fromCard, toCardDigits, money } = req.body;
 
     const senderCard = await Card.findOne({
       createdBy: accountId,
@@ -207,6 +207,28 @@ module.exports.sendMoney = async (req, res) => {
     if (!claimerCard) {
       return res.status(404).json({ message: "Claimer Card not found" });
     }
+
+    if (senderCard.balance < money) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    const updatedCardSender = await Card.updateOne(
+      { _id: senderCard._id },
+      { $inc: { balance: -money } },
+      { new: true }
+    );
+
+    const updatedCardClaimer = await Card.updateOne(
+      { _id: claimerCard._id },
+      { $inc: { balance: money } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Money send successfully",
+      senderCard: updatedCardSender,
+      claimerCard: updatedCardClaimer,
+    });
   } catch (e) {
     console.error("Error during call card: ", e);
     res.status(500).json({ message: "Server error" });
