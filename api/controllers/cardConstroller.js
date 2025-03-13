@@ -212,13 +212,13 @@ module.exports.sendMoney = async (req, res) => {
       return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    const updatedCardSender = await Card.updateOne(
+    const updatedCardSender = await Card.findOneAndUpdate(
       { _id: senderCard._id },
       { $inc: { balance: -money } },
       { new: true }
     );
 
-    const updatedCardClaimer = await Card.updateOne(
+    const updatedCardClaimer = await Card.findOneAndUpdate(
       { _id: claimerCard._id },
       { $inc: { balance: money } },
       { new: true }
