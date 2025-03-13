@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 
 const controller = require("../controllers/cardConstroller");
-const { verify } = require("../middleware/authMiddleware");
 
 router.post("/create", controller.create);
 router.post("/call", controller.callCards);
